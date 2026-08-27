@@ -182,3 +182,56 @@ Analysis & Recommendation Module
 Database
   ↓
 Results to User
+## Latest Features 
+
+### AI Smart Problem Routing
+ProblemBridge AI intelligently decides the best route for a reported problem:
+
+- **Authority Routing** – Routine local issues such as drainage blockage, garbage accumulation, potholes, or streetlight problems are sent to the concerned authority.
+- **Innovation Routing** – Complex problems that require new technological solutions can become Innovation Challenges.
+- **Dual Routing** – Large recurring problems can be sent to authorities for immediate action while also becoming Innovation Opportunities for long-term solutions.
+
+### Duplicate Problem Detection
+The AI checks for similar problems and helps avoid duplicate reports. Citizens can support an existing problem instead of creating another duplicate complaint.
+
+### AI Priority Analysis
+Problems are given a priority level based on factors such as urgency, severity, similar reports, and the number of people potentially affected.
+
+### Voice Problem Reporting
+Users can describe their problems using voice input in English, Telugu, or Hindi. The speech is converted into editable text before submission.
+
+### Project Submission
+Innovators can submit solution proposals and later submit their complete projects for review by providing a public Website URL.
+
+### Dynamic Solution Progress
+Project progress is based on the actual project status:
+
+- Proposed – 10%
+- In Development – 30%
+- Testing – 50%
+- Ready for Review – 70%
+- Implemented – 90%
+- Problem Solved – 100%
+
+### Main Workflow
+
+```text
+Real Problem
+↓
+AI Analysis
+↓
+Duplicate Detection
+↓
+Priority Analysis
+↓
+Smart Routing
+↓
+Authority Action OR Innovation Challenge OR Both
+↓
+Solution Development
+↓
+Review and Testing
+↓
+Implementation
+↓
+Verified Problem Resolution
