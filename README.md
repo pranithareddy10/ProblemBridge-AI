@@ -235,3 +235,14 @@ Review and Testing
 Implementation
 ↓
 Verified Problem Resolution
+##update on sep 7th 2026
+🔐 Authentication System
+Added Login and Registration pages.
+Supports different user roles:
+👤 Citizen
+💡 Student / Innovator
+🏢 Authority / Organization
+🛡️ Admin / Reviewer
+Role-based navigation to the relevant sections of ProblemBridge AI.
+Designed to integrate with the existing Problem Reporting, Innovation Challenges, and Solution Tracking workflow.
+Frontend prototype authentication implemented without changing the existing core pages and features.
