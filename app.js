@@ -1,7 +1,10 @@
 const app = document.querySelector('#app');
+const savedAuthUser = JSON.parse(sessionStorage.getItem('problemBridgeUser') || 'null');
 
 const state = {
-  view: 'home',
+  view: savedAuthUser ? (savedAuthUser.role === 'Citizen' ? 'home' : savedAuthUser.role === 'Authority / Organization' ? 'authorityTracking' : 'dashboard') : 'register',
+  authUser: savedAuthUser,
+  authError: '',
   submitted: false,
   problem: {
     title: 'Difficulty Finding Available Hospital Beds',
@@ -45,6 +48,46 @@ const challenges = [
 function icon(symbol) { return `<span aria-hidden="true">${symbol}</span>`; }
 function setView(view) { state.view = view; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function notify(message) { state.toast = message; render(); setTimeout(() => { state.toast = ''; render(); }, 2600); }
+function chooseRegistrationRole(role) {
+  const roleInput = document.querySelector('#registrationRole');
+  if (roleInput) roleInput.value = role;
+  document.querySelectorAll('.role-card').forEach(card => card.classList.toggle('selected', card.dataset.role === role));
+}
+function registerAccount(event) {
+  event.preventDefault();
+  const form = event.target;
+  const password = form.querySelector('#registerPassword').value;
+  const confirmPassword = form.querySelector('#confirmPassword').value;
+  if (password !== confirmPassword) { state.authError = 'Passwords do not match.'; render(); return; }
+  const account = { name: form.querySelector('#fullName').value.trim(), email: form.querySelector('#registerEmail').value.trim().toLowerCase(), password, role: form.querySelector('#registrationRole').value };
+  localStorage.setItem('problemBridgeAccount', JSON.stringify(account));
+  state.authError = '';
+  notify('Account created. Please log in to continue.');
+  setTimeout(() => setView('login'), 500);
+}
+function loginAccount(event) {
+  event.preventDefault();
+  const form = event.target;
+  const email = form.querySelector('#loginEmail').value.trim().toLowerCase();
+  const password = form.querySelector('#loginPassword').value;
+  const account = JSON.parse(localStorage.getItem('problemBridgeAccount') || 'null');
+  if (!account || account.email !== email || account.password !== password) {
+    state.authError = 'We could not find a matching prototype account. Register first or check your details.';
+    render();
+    return;
+  }
+  const role = form.querySelector('#loginRole').value;
+  state.authUser = { name: account.name, email: account.email, role };
+  state.authError = '';
+  sessionStorage.setItem('problemBridgeUser', JSON.stringify(state.authUser));
+  setView(role === 'Citizen' ? 'home' : role === 'Authority / Organization' ? 'authorityTracking' : 'dashboard');
+}
+function register() {
+  return `<div class="auth-shell"><div class="auth-brand"><span class="brand-mark">P</span><strong>Problem<span>Bridge</span> AI</strong></div><div class="auth-layout"><div class="auth-intro"><div class="eyebrow">${icon('◌')} Community powered change</div><h1>From Real Problems<br><em>to Real Solutions.</em></h1><p class="lead">Join a connected community where lived experiences become action, innovation, and measurable impact.</p><div class="auth-promise"><span>${icon('✦')}</span><div><strong>One bridge, many possibilities</strong><small>Report, collaborate, and help move your community forward.</small></div></div></div><div class="auth-card"><div class="overline">Create your account</div><h2>Create Your ProblemBridge Account</h2><p class="auth-subheading">Join the community solving real-world problems.</p><form onsubmit="registerAccount(event)"><div class="auth-fields"><div class="field"><label for="fullName">Full Name</label><input id="fullName" autocomplete="name" required /></div><div class="field"><label for="registerEmail">Email Address</label><input id="registerEmail" type="email" autocomplete="email" required /></div><div class="field"><label for="mobileNumber">Mobile Number <span class="optional">(optional)</span></label><input id="mobileNumber" type="tel" autocomplete="tel" /></div><div class="field"><label for="registerPassword">Password</label><input id="registerPassword" type="password" minlength="6" autocomplete="new-password" required /></div><div class="field"><label for="confirmPassword">Confirm Password</label><input id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required /></div></div><div class="role-heading"><label>How will you use ProblemBridge AI?</label><input id="registrationRole" type="hidden" value="Citizen" /></div><div class="role-grid"><button type="button" class="role-card selected" data-role="Citizen" onclick="chooseRegistrationRole('Citizen')"><span class="role-icon">👤</span><strong>Citizen</strong><small>Report and track local problems</small></button><button type="button" class="role-card" data-role="Student / Innovator" onclick="chooseRegistrationRole('Student / Innovator')"><span class="role-icon">🎓</span><strong>Student / Innovator</strong><small>Build solutions for challenges</small></button><button type="button" class="role-card restricted" data-role="Authority / Organization" onclick="notify('Authority access may require verification or approval.')"><span class="role-icon">🏛️</span><strong>Authority / Organization</strong><small>Verification may be required</small></button><button type="button" class="role-card restricted" data-role="Admin / Reviewer" onclick="notify('Admin access may require verification or approval.')"><span class="role-icon">🛡️</span><strong>Admin / Reviewer</strong><small>Approval may be required</small></button></div>${state.authError ? `<div class="auth-error">${state.authError}</div>` : ''}<button class="primary-btn auth-submit" type="submit">Create Account ${icon('→')}</button></form><p class="auth-switch">Already have an account? <button onclick="setView('login')">Login</button></p></div></div></div>`;
+}
+function login() {
+  return `<div class="auth-shell"><div class="auth-brand"><span class="brand-mark">P</span><strong>Problem<span>Bridge</span> AI</strong></div><div class="auth-layout login-layout"><div class="auth-intro"><div class="eyebrow">${icon('↗')} Welcome back</div><h1>Keep the bridge<br><em>moving forward.</em></h1><p class="lead">Pick up where you left off and keep connecting real problems with real solutions.</p><div class="auth-promise"><span>${icon('⌁')}</span><div><strong>Your impact trail is waiting</strong><small>Access reports, challenges, progress, and community outcomes.</small></div></div></div><div class="auth-card"><div class="overline">Sign in to continue</div><h2>Welcome Back</h2><p class="auth-subheading">Continue connecting real problems with real solutions.</p><form onsubmit="loginAccount(event)"><div class="auth-fields"><div class="field"><label for="loginEmail">Email Address</label><input id="loginEmail" type="email" autocomplete="email" required /></div><div class="field"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required /></div></div><div class="login-role"><label for="loginRole">Login as</label><select id="loginRole"><option>Citizen</option><option>Student / Innovator</option><option>Authority / Organization</option><option>Admin / Reviewer</option></select></div>${state.authError ? `<div class="auth-error">${state.authError}</div>` : ''}<button class="primary-btn auth-submit" type="submit">Login ${icon('→')}</button><button class="forgot-link" type="button" onclick="notify('Password recovery is available as a frontend demo only.')">Forgot Password?</button></form><p class="auth-switch">Don't have an account? <button onclick="setView('register')">Register</button></p></div></div></div>`;
+}
 function startSpeech() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { notify('Speech recognition is not supported in this browser.'); return; }
@@ -155,7 +198,9 @@ function authorityTracking() {
   return `<section class="view"><div class="page-header"><div><div class="overline">Authority resolution path</div><h1>Problem tracking</h1><p>Routine issues stay with the organization equipped to resolve them. Status updates are simulated for this prototype.</p></div><button class="secondary-btn" onclick="setView('analysis')">← Back to AI analysis</button></div><div class="challenge-layout"><div class="panel"><span class="badge">${state.authorityStatus}</span><h2>${state.problem.title}</h2><div class="meta-list"><div><small>Priority</small><strong>${state.routing?.score || 72} / 100 · ${state.routing?.level || 'HIGH'}</strong></div><div><small>Date reported</small><strong>27 Aug 2026</strong></div><div><small>Location</small><strong>${state.problem.location}</strong></div><div><small>Similar reports</small><strong>${state.routing?.similarReports || 18}</strong></div><div><small>Assigned organization</small><strong>${state.routing?.authority || 'Greater Hyderabad Municipal Corporation'}</strong></div></div><div class="progress-status"><label for="authorityStatus">Simulate status update</label><select id="authorityStatus" onchange="updateAuthorityStatus(this.value)">${['Authority Reviewing', 'Work Assigned', 'Resolution in Progress', 'Resolved'].map(status => `<option ${state.authorityStatus === status ? 'selected' : ''}>${status}</option>`).join('')}</select></div>${verification}<button class="secondary-btn" onclick="notify('The issue has been marked still not resolved. Authority visibility increased.')">Report still not resolved</button></div><aside class="panel"><h2>Resolution timeline</h2><div class="timeline">${timeline}</div></aside></div></section>`;
 }
 function render() {
-  const views = { home, report, analysis, challenge, challengeDetails, dashboard, propose, solutionDetails, tracking, authorityTracking };
-  layout(views[state.view]());
+  if (!state.authUser && !['register', 'login'].includes(state.view)) state.view = 'register';
+  const views = { register, login, home, report, analysis, challenge, challengeDetails, dashboard, propose, solutionDetails, tracking, authorityTracking };
+  if (['register', 'login'].includes(state.view)) app.innerHTML = views[state.view]();
+  else layout(views[state.view]());
 }
 render();
