@@ -1,0 +1,33 @@
+{
+  "name": "problembridge-ai",
+  "version": "1.0.0",
+  "description": "Transforming Real-World Problems into Innovation Opportunities - Full Stack Application",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "seed": "node server/config/seed.js",
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "problem-solving",
+    "civic-tech",
+    "ai",
+    "innovation",
+    "full-stack",
+    "express",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.9.5",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1"
+  }
+}

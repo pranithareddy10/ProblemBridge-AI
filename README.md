@@ -148,101 +148,111 @@ The final output can then become a starting point for developing a real project.
 
 ## Technology Stack
 
-The technology stack will be finalized during development.
+The platform is built as a complete full-stack web application:
 
-Possible technologies include:
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript SPA, Web Speech API (English, Telugu, Hindi voice recognition)
+- **Backend / API**: Node.js, Express.js, RESTful Architecture
+- **Database**:
+  - Zero-config built-in database (`node:sqlite`) for immediate, hassle-free local execution
+  - Configurable MongoDB support via `MONGODB_URI` in `.env`
+- **Authentication**: JWT (JSON Web Tokens) with `bcryptjs` password hashing and role-based access control
+- **AI Processing Engine**: Multi-factor root cause extraction, semantic duplicate detection, priority & urgency scoring (0-100), smart routing, and pluggable Google Gemini API adapter (`GEMINI_API_KEY`)
+- **File Uploads**: `multer` storage for problem evidence and solution documentation
 
-- HTML
-- CSS
-- JavaScript
-- React.js
-- Node.js
-- Express.js
-- MongoDB
-- AI/ML APIs
-- REST APIs
+## Quick Start & Running Locally
 
-## Project Architecture
+### 1. Prerequisites
+- Node.js (v18 or newer recommended, tested on Node v26)
+- npm
 
-The proposed architecture consists of:
+### 2. Installation
+```bash
+git clone https://github.com/pranithareddy10/ProblemBridge-AI.git
+cd ProblemBridge-AI
+npm install
+```
 
-```text
-User
-  ↓
-Frontend
-  ↓
-Backend / API
-  ↓
-Problem Processing Module
-  ↓
-AI Engine
-  ↓
-Analysis & Recommendation Module
-  ↓
-Database
-  ↓
-Results to User
-## Latest Features 
+### 3. Environment Configuration
+Create or modify `.env` (a ready-to-use template is available in `.env.example`):
+```env
+PORT=3000
+NODE_ENV=development
+JWT_SECRET=your_jwt_secret_key_here
 
-### AI Smart Problem Routing
-ProblemBridge AI intelligently decides the best route for a reported problem:
+# Optional: MongoDB connection string (leave blank to use built-in zero-config database)
+# MONGODB_URI=mongodb://localhost:27017/problembridge
 
-- **Authority Routing** – Routine local issues such as drainage blockage, garbage accumulation, potholes, or streetlight problems are sent to the concerned authority.
-- **Innovation Routing** – Complex problems that require new technological solutions can become Innovation Challenges.
-- **Dual Routing** – Large recurring problems can be sent to authorities for immediate action while also becoming Innovation Opportunities for long-term solutions.
+# Optional: Google Gemini API Key for external LLM generation (local AI NLP fallback runs automatically if blank)
+# GEMINI_API_KEY=your_gemini_api_key_here
+```
 
-### Duplicate Problem Detection
-The AI checks for similar problems and helps avoid duplicate reports. Citizens can support an existing problem instead of creating another duplicate complaint.
+### 4. Seed Initial Data
+Populate realistic community problems, innovation challenges, demo accounts, and solution proposals:
+```bash
+npm run seed
+```
 
-### AI Priority Analysis
-Problems are given a priority level based on factors such as urgency, severity, similar reports, and the number of people potentially affected.
+### 5. Start the Application
+```bash
+# Production start
+npm start
 
-### Voice Problem Reporting
-Users can describe their problems using voice input in English, Telugu, or Hindi. The speech is converted into editable text before submission.
+# Development mode (with live reload)
+npm run dev
+```
 
-### Project Submission
-Innovators can submit solution proposals and later submit their complete projects for review by providing a public Website URL.
+Open [http://localhost:3000](http://localhost:3000) in your web browser.
 
-### Dynamic Solution Progress
-Project progress is based on the actual project status:
+### 6. Run Automated Tests
+```bash
+npm test
+```
 
-- Proposed – 10%
-- In Development – 30%
-- Testing – 50%
-- Ready for Review – 70%
-- Implemented – 90%
-- Problem Solved – 100%
+---
 
-### Main Workflow
+## Default Demo Credentials
 
-```text
-Real Problem
-↓
-AI Analysis
-↓
-Duplicate Detection
-↓
-Priority Analysis
-↓
-Smart Routing
-↓
-Authority Action OR Innovation Challenge OR Both
-↓
-Solution Development
-↓
-Review and Testing
-↓
-Implementation
-↓
-Verified Problem Resolution
-##update on sep 7th 2026
-🔐 Authentication System
-Added Login and Registration pages.
-Supports different user roles:
-👤 Citizen
-💡 Student / Innovator
-🏢 Authority / Organization
-🛡️ Admin / Reviewer
-Role-based navigation to the relevant sections of ProblemBridge AI.
-Designed to integrate with the existing Problem Reporting, Innovation Challenges, and Solution Tracking workflow.
-Frontend prototype authentication implemented without changing the existing core pages and features.
+The database comes pre-seeded with accounts for testing every role:
+
+| Role | Email | Password |
+|---|---|---|
+| **Citizen** | `citizen@problembridge.test` | `password123` |
+| **Student / Innovator** | `innovator@problembridge.test` | `password123` |
+| **Authority / Organization** | `authority@ghmc.gov.in` | `password123` |
+| **Admin / Reviewer** | `admin@problembridge.test` | `password123` |
+
+---
+
+## REST API Reference
+
+### 🔐 Authentication (`/api/auth`)
+- `POST /api/auth/register` - Create account with role (`Citizen`, `Student / Innovator`, `Authority / Organization`, `Admin / Reviewer`).
+- `POST /api/auth/login` - Authenticate user and receive JWT token.
+- `GET /api/auth/me` - Fetch authenticated user profile.
+
+### 📢 Problems & AI Analysis (`/api/problems`)
+- `POST /api/problems/analyze` - Real-time AI preview: extracts root causes, checks duplicates, calculates urgency score, and determines smart routing.
+- `POST /api/problems` - Submit problem report with optional image/video evidence file.
+- `GET /api/problems` - List reported problems (supports `?category=`, `?route=`, `?search=`).
+- `GET /api/problems/:id` - Fetch problem details with AI breakdown and authority status.
+- `POST /api/problems/:id/support` - Support an existing problem to avoid duplicate reports.
+- `PATCH /api/problems/:id/authority-status` - Update municipal resolution workflow status (`Authority Reviewing`, `Work Assigned`, `Resolution in Progress`, `Resolved`).
+- `POST /api/problems/:id/verify` - Citizen verification loop (`yes` = Citizen Verified Resolved / `no` = Reopened).
+
+### 💡 Innovation Challenges (`/api/challenges`)
+- `GET /api/challenges` - Browse open challenges with category and search filters.
+- `GET /api/challenges/:id` - Challenge brief with required skills and submitted solutions.
+- `POST /api/challenges` - Create a new challenge.
+- `POST /api/challenges/:id/watch` - Save/bookmark challenge to innovator workspace.
+
+### 🚀 Solutions & Projects (`/api/solutions`)
+- `POST /api/solutions` - Submit a solution proposal or complete project with live website URL, source code, and demo link.
+- `GET /api/solutions` - List submitted solutions.
+- `GET /api/solutions/:id` - View solution details, verified resources, and progress timeline.
+- `PATCH /api/solutions/:id/status` - Update lifecycle progress (`Proposed [10%]`, `In Development [30%]`, `Testing [50%]`, `Ready for Review [70%]`, `Implemented [90%]`, `Problem Solved [100%]`).
+
+### 📊 Platform Analytics (`/api/stats`)
+- `GET /api/stats` - Live platform metrics (problems reported, solved, active challenges, innovators, and smart routing breakdown percentages).
+
+### 🩺 System Health (`/api/health`)
+- `GET /api/health` - Server health status and uptime.
