@@ -549,6 +549,7 @@ const SolutionRepository = {
         id: s.id,
         challengeId: s.challengeId || 'hospital',
         problemId: s.problemId || null,
+        submittedBy: s.submittedBy || null,
         authorId: s.authorId || null,
         authorName: s.authorName || 'Innovator',
         title: s.title,
@@ -612,10 +613,13 @@ const SolutionRepository = {
     return this.findById(s.id);
   },
 
-  async findByChallengeAndAuthor(challengeId, authorId) {
-    if (!challengeId || !authorId) return null;
+  async findByChallengeAndAuthor(challengeId, authorId, submittedBy = null) {
+    if (!challengeId || (!authorId && !submittedBy)) return null;
     if (isMongo()) {
-      return Solution.findOne({ challengeId, authorId }).lean();
+      const ownerQuery = submittedBy
+        ? { $or: [{ submittedBy }, { submittedBy: null, authorId }] }
+        : { authorId };
+      return Solution.findOne({ challengeId, ...ownerQuery }).sort({ updatedAt: -1 }).lean();
     }
     const stmt = db.prepare('SELECT * FROM solutions WHERE challengeId = ? AND authorId = ? ORDER BY updatedAt DESC LIMIT 1');
     const row = stmt.get(challengeId, authorId);
@@ -652,18 +656,22 @@ const SolutionRepository = {
     };
   },
 
-  async findAll({ challengeId, authorId, status, search } = {}) {
+  async findAll({ challengeId, authorId, submittedBy, status, search } = {}) {
     if (isMongo()) {
       const query = {};
       if (challengeId) query.challengeId = challengeId;
       if (authorId) query.authorId = authorId;
+      if (submittedBy) {
+        query.$or = [{ submittedBy }, { submittedBy: null, authorId }];
+      }
       if (status) query.status = status;
       if (search) {
-        query.$or = [
+        const searchQuery = [
           { title: { $regex: search, $options: 'i' } },
           { description: { $regex: search, $options: 'i' } },
           { team: { $regex: search, $options: 'i' } }
         ];
+        query.$and = (query.$and || []).concat({ $or: searchQuery });
       }
       const rows = await Solution.find(query).sort({ updatedAt: -1 }).lean();
       return rows.map(r => ({

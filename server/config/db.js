@@ -7,6 +7,24 @@ const mongoose = require('mongoose');
 let isMongo = false;
 let db = null;
 
+async function backfillSolutionOwnership() {
+  const { User, Solution } = require('../models/mongoModels');
+  const legacySolutions = await Solution.find({
+    submittedBy: null,
+    authorId: { $nin: [null, ''] }
+  }).select('_id authorId').lean();
+
+  for (const solution of legacySolutions) {
+    const user = await User.findOne({ id: solution.authorId }).select('_id').lean();
+    if (user) {
+      await Solution.updateOne(
+        { _id: solution._id, submittedBy: null },
+        { $set: { submittedBy: user._id } }
+      );
+    }
+  }
+}
+
 const dataDir = path.join(__dirname, '../../data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -147,6 +165,7 @@ async function connectDatabase() {
       await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 3000 });
       isMongo = true;
       console.log(` Connected to MongoDB successfully at: ${mongoUri}`);
+      await backfillSolutionOwnership();
       return { isMongo: true, type: 'mongodb' };
     } catch (err) {
       console.warn(` MongoDB connection failed (${err.message}). Falling back to local zero-config SQLite database.`);

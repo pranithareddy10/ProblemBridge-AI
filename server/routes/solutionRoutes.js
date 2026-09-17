@@ -75,7 +75,8 @@ router.post('/', verifyToken, requireRole(['Student / Innovator', 'Admin / Revie
       });
     }
 
-    const existingSolution = await SolutionRepository.findByChallengeAndAuthor(challengeId, req.user.id);
+    const submittedBy = req.user._id ? String(req.user._id) : null;
+    const existingSolution = await SolutionRepository.findByChallengeAndAuthor(challengeId, req.user.id, submittedBy);
     if (existingSolution) {
       return res.status(200).json({
         success: true,
@@ -92,6 +93,7 @@ router.post('/', verifyToken, requireRole(['Student / Innovator', 'Admin / Revie
       id: solutionId,
       challengeId,
       problemId: problemId || challenge.problemId || null,
+      submittedBy,
       authorId: req.user.id,
       authorName: req.user.fullName,
       authorRole: req.user.role,
@@ -138,6 +140,7 @@ router.get('/my', verifyToken, async (req, res) => {
     const solutions = await SolutionRepository.findAll({
       challengeId,
       status,
+      submittedBy: req.user._id ? String(req.user._id) : null,
       authorId: req.user.id
     });
     res.json({ success: true, count: solutions.length, solutions });
@@ -153,7 +156,9 @@ router.get('/:id', verifyToken, async (req, res) => {
     if (!solution) {
       return res.status(404).json({ success: false, message: 'Solution not found.' });
     }
-    if (req.user.role !== 'Admin / Reviewer' && solution.authorId !== req.user.id) {
+    const ownsSolution = solution.authorId === req.user.id
+      || (req.user._id && solution.submittedBy && String(solution.submittedBy) === String(req.user._id));
+    if (req.user.role !== 'Admin / Reviewer' && !ownsSolution) {
       return res.status(403).json({ success: false, message: 'You are not authorized to view this solution.' });
     }
     res.json({ success: true, solution });
@@ -169,7 +174,9 @@ router.patch('/:id', verifyToken, requireRole(['Student / Innovator', 'Admin / R
     if (!current) {
       return res.status(404).json({ success: false, message: 'Solution not found.' });
     }
-    if (req.user.role !== 'Admin / Reviewer' && current.authorId !== req.user.id) {
+    const ownsSolution = current.authorId === req.user.id
+      || (req.user._id && current.submittedBy && String(current.submittedBy) === String(req.user._id));
+    if (req.user.role !== 'Admin / Reviewer' && !ownsSolution) {
       return res.status(403).json({ success: false, message: 'You are not allowed to edit this solution.' });
     }
 
@@ -211,7 +218,8 @@ router.patch('/:id/status', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Solution not found.' });
     }
 
-    const isOwner = current.authorId === req.user.id;
+    const isOwner = current.authorId === req.user.id
+      || (req.user._id && current.submittedBy && String(current.submittedBy) === String(req.user._id));
     const isReviewer = req.user.role === 'Admin / Reviewer';
     if (!isOwner && !isReviewer) {
       return res.status(403).json({ success: false, message: 'You are not allowed to update this solution.' });

@@ -63,6 +63,7 @@ const solutionSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   challengeId: { type: String, required: true },
   problemId: { type: String, default: null },
+  submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
   authorId: { type: String, default: null },
   authorName: { type: String, default: 'Innovator' },
   title: { type: String, required: true },

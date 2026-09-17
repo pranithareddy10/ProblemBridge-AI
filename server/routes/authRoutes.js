@@ -51,6 +51,7 @@ router.post('/register', async (req, res) => {
       message: 'Account created successfully.',
       token,
       user: {
+        _id: newUser._id,
         id: newUser.id,
         fullName: newUser.fullName,
         email: newUser.email,
@@ -98,6 +99,7 @@ router.post('/login', async (req, res) => {
       message: 'Logged in successfully.',
       token,
       user: {
+        _id: user._id,
         id: user.id,
         fullName: user.fullName,
         email: user.email,

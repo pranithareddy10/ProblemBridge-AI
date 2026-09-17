@@ -27,6 +27,7 @@ const state = {
   speechLanguage: 'en-IN',
   challenges: [],
   currentChallenge: null,
+  mySolutions: [],
   solution: {
     id: '',
     title: '',
@@ -448,9 +449,10 @@ async function startChallengeSolution(id) {
     } finally {
       state.loading = false;
       render();
+    }
   }
 
-  async function openTracking() {
+async function openTracking() {
     if (!state.authUser) {
       setView('login');
       return;
@@ -459,7 +461,8 @@ async function startChallengeSolution(id) {
     render();
     try {
       const res = await API.solutions.my();
-      state.solution = res.solutions?.[0] || {
+      state.mySolutions = res.solutions || [];
+      state.solution = state.mySolutions[0] || {
         id: '',
         title: '',
         description: '',
@@ -481,7 +484,6 @@ async function startChallengeSolution(id) {
       render();
     }
   }
-}
 
 // Submit Solution
 async function submitSolution(event) {
@@ -1423,7 +1425,7 @@ function solutionDetails() {
 
 function tracking() {
   const s = state.solution;
-  if (!s.id) {
+  if (!state.mySolutions.length || !s.id) {
     return `
       <section class="view">
         <div class="panel empty">
@@ -1435,6 +1437,20 @@ function tracking() {
     `;
   }
   const progress = s.progressPercent || solutionProgress[s.status] || 10;
+  const solutionList = state.mySolutions.length > 1 ? `
+    <div class="panel" style="margin-bottom:24px">
+      <h2>Your solutions</h2>
+      <div class="challenge-grid">
+        ${state.mySolutions.map(solution => `
+          <button class="challenge-card" type="button" onclick="selectTrackedSolution('${solution.id}')">
+            <span class="badge">${solution.status}</span>
+            <h3>${solution.title}</h3>
+            <p>${solution.progressPercent}% complete</p>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
 
   return `
     <section class="view">
@@ -1447,6 +1463,7 @@ function tracking() {
         <button class="primary-btn" onclick="setView('dashboard')">Find another challenge</button>
       </div>
 
+      ${solutionList}
       <div class="challenge-layout">
         <div class="panel">
           <div class="overline">${s.title}</div>
@@ -1492,6 +1509,14 @@ function tracking() {
       </div>
     </section>
   `;
+}
+
+function selectTrackedSolution(id) {
+  const solution = state.mySolutions.find(item => item.id === id);
+  if (solution) {
+    state.solution = solution;
+    render();
+  }
 }
 
 function authorityTracking() {
